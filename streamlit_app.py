@@ -230,11 +230,11 @@ def main():
     
     # Main header with enhanced styling
     st.markdown('<h1 class="main-header">💰 Financial AI Assistant</h1>', unsafe_allow_html=True)
-    st.markdown(
-        '<p style="text-align: center; color: #666; font-style: italic; font-size: 1.2rem;">'
-        'Powered by MCP (Model Context Protocol) • Advanced Portfolio Analytics</p>', 
-        unsafe_allow_html=True
-    )
+    # st.markdown(
+    #     '<p style="text-align: center; color: #666; font-style: italic; font-size: 1.2rem;">'
+    #     'Powered by MCP (Model Context Protocol) • Advanced Portfolio Analytics</p>',
+    #     unsafe_allow_html=True
+    # )
     
     # Create main layout
     create_sidebar(mcp_host)
@@ -244,26 +244,26 @@ def create_sidebar(mcp_host: MCPHost):
     """Enhanced sidebar with comprehensive controls"""
     with st.sidebar:
         # Server Status Section
-        st.markdown("### 🔧 System Status")
-        
-        # Auto-refresh toggle
-        auto_refresh = st.checkbox("🔄 Auto Refresh", value=st.session_state.user_preferences['auto_refresh'])
-        st.session_state.user_preferences['auto_refresh'] = auto_refresh
-        
-        # Manual refresh or auto-refresh logic
-        if st.button("🔄 Refresh Status", use_container_width=True) or auto_refresh:
-            if (st.session_state.last_update is None or 
-                (datetime.now() - st.session_state.last_update).seconds > 30):
-                
-                with st.spinner("Checking connectivity..."):
-                    connectivity = mcp_host.test_server_connectivity()
-                    st.session_state.connectivity = connectivity
-                    st.session_state.last_update = datetime.now()
-        
-        # Display enhanced server status
-        display_server_status()
-        
-        st.divider()
+        # st.markdown("### 🔧 System Status")
+        #
+        # # Auto-refresh toggle
+        # auto_refresh = st.checkbox("🔄 Auto Refresh", value=st.session_state.user_preferences['auto_refresh'])
+        # st.session_state.user_preferences['auto_refresh'] = auto_refresh
+        #
+        # # Manual refresh or auto-refresh logic
+        # if st.button("🔄 Refresh Status", use_container_width=True) or auto_refresh:
+        #     if (st.session_state.last_update is None or
+        #         (datetime.now() - st.session_state.last_update).seconds > 30):
+        #
+        #         with st.spinner("Checking connectivity..."):
+        #             connectivity = mcp_host.test_server_connectivity()
+        #             st.session_state.connectivity = connectivity
+        #             st.session_state.last_update = datetime.now()
+        #
+        # # Display enhanced server status
+        # display_server_status()
+        #
+        # st.divider()
         
         # Quick Actions Section
         st.markdown("### 📊 Quick Actions")
@@ -281,10 +281,10 @@ def create_sidebar(mcp_host: MCPHost):
         st.markdown("### 📈 Market")
         display_market_sidebar(mcp_host)
         
-        st.divider()
+        # st.divider()
         
         # Settings Section
-        create_settings_section()
+        # create_settings_section()
 
 def display_server_status():
     """Display enhanced server status information"""
@@ -320,22 +320,22 @@ def create_quick_actions(mcp_host: MCPHost):
         if st.button("📈 Portfolio", use_container_width=True):
             refresh_portfolio_data(mcp_host)
         
-        if st.button("🔍 Analysis", use_container_width=True):
-            st.session_state.show_analysis = True
+        # if st.button("🔍 Analysis", use_container_width=True):
+        #     st.session_state.show_analysis = True
     
     with col2:
         if st.button("📰 Market", use_container_width=True):
             refresh_market_data(mcp_host)
         
-        if st.button("➕ Position", use_container_width=True):
-            st.session_state.show_add_position = True
+        # if st.button("➕ Position", use_container_width=True):
+        #     st.session_state.show_add_position = True
     
     # Advanced actions
-    if st.button("📊 Dashboard", use_container_width=True):
-        st.session_state.show_dashboard = True
-    
-    if st.button("⚠️ Risk Report", use_container_width=True):
-        st.session_state.show_risk_analysis = True
+    # if st.button("📊 Dashboard", use_container_width=True):
+    #     st.session_state.show_dashboard = True
+    #
+    # if st.button("⚠️ Risk Report", use_container_width=True):
+    #     st.session_state.show_risk_analysis = True
 
 def display_portfolio_sidebar(mcp_host: MCPHost):
     """Enhanced portfolio sidebar display"""
@@ -491,7 +491,7 @@ def create_ai_chat_interface(mcp_host: MCPHost):
                             st.info("Response copied!")
     
     # Enhanced chat input with suggestions
-    create_chat_suggestions()
+    # create_chat_suggestions()
     
     # Main chat input
     if prompt := st.chat_input("Ask about your portfolio, stocks, market analysis, or investment strategies..."):
@@ -514,7 +514,7 @@ def create_ai_chat_interface(mcp_host: MCPHost):
 
 def create_chat_suggestions():
     """Create quick suggestion buttons for common queries"""
-    st.markdown("**💡 Quick Questions:**")
+    # st.markdown("**💡 Quick Questions:**")
     
     suggestions = [
         "Show my portfolio performance",
@@ -1472,5 +1472,48 @@ def analyze_stock_comprehensive(mcp_host: MCPHost, symbol: str) -> str:
 **MA200:**
     ${ma.get('ma_200', 0):.2f if ma.get('ma_200') else 'N/A'}
     """
+
+
+def refresh_portfolio_data(mcp_host: MCPHost):
+    """Refresh portfolio data"""
+    with st.spinner("Refreshing portfolio data..."):
+        portfolio_data = mcp_host.call_mcp_tool(mcp_host.portfolio_server, "get_portfolio_overview")
+        if "error" not in portfolio_data:
+            st.session_state.portfolio_data = portfolio_data
+            st.success("Portfolio data refreshed!")
+        else:
+            st.error(f"Error refreshing portfolio: {portfolio_data['error']}")
+
+
+def refresh_market_data(mcp_host: MCPHost):
+    """Refresh market data"""
+    with st.spinner("Refreshing market data..."):
+        market_data = mcp_host.call_mcp_tool(mcp_host.market_data_server, "get_market_overview")
+        if "error" not in market_data:
+            st.session_state.market_data = market_data
+            st.success("Market data refreshed!")
+        else:
+            st.error(f"Error refreshing market data: {market_data['error']}")
+
+
+def refresh_all_data(mcp_host: MCPHost):
+    """Refresh all data sources"""
+    with st.spinner("Refreshing all data..."):
+        # Refresh portfolio
+        portfolio_data = mcp_host.call_mcp_tool(mcp_host.portfolio_server, "get_portfolio_overview")
+        if "error" not in portfolio_data:
+            st.session_state.portfolio_data = portfolio_data
+
+        # Refresh market data
+        market_data = mcp_host.call_mcp_tool(mcp_host.market_data_server, "get_market_overview")
+        if "error" not in market_data:
+            st.session_state.market_data = market_data
+
+        # Update connectivity status
+        connectivity = mcp_host.test_server_connectivity()
+        st.session_state.connectivity = connectivity
+        st.session_state.last_update = datetime.now()
+
+        st.success("All data refreshed!")
 
 main()
