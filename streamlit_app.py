@@ -15,6 +15,8 @@ from typing import Dict, Any, List, Optional
 import logging
 import time
 import re
+# In streamlit_app.py
+from agents.financial_agent import TrueAgenticFinancialAgent
 
 print("DEBUG: All imports successful")
 
@@ -227,6 +229,8 @@ def main():
     
     # Initialize MCP Host
     mcp_host = MCPHost()
+
+    agent = get_agent()
     
     # Main header with enhanced styling
     st.markdown('<h1 class="main-header">💰 Financial AI Assistant</h1>', unsafe_allow_html=True)
@@ -455,7 +459,9 @@ def create_main_content(mcp_host: MCPHost):
     ])
     
     with tab1:
-        create_ai_chat_interface(mcp_host)
+        # create_ai_chat_interface(mcp_host)
+        add_custom_css()  # Add the styling
+        create_ai_chat_interface_with_agent()  # New agentic version
     
     with tab2:
         create_dashboard_view(mcp_host)
@@ -468,6 +474,92 @@ def create_main_content(mcp_host: MCPHost):
     
     with tab5:
         create_market_view(mcp_host)
+
+
+# Updated chat interface function
+def create_ai_chat_interface_with_agent():
+    """Enhanced AI chat interface using the agentic system"""
+
+    st.markdown("### 💬 Chat with Your AI Financial Advisor")
+
+    # Initialize agent
+    @st.cache_resource
+    def get_financial_agent():
+        return TrueAgenticFinancialAgent()
+
+    try:
+        agent = get_financial_agent()
+    except Exception as e:
+        st.error(f"❌ Failed to initialize agent: {e}")
+        st.info("💡 Make sure you have OPENAI_API_KEY set in your .env file")
+        return
+
+    # Chat history display
+    for message in st.session_state.chat_history:
+        with st.chat_message(message["role"]):
+            if message["role"] == "assistant" and isinstance(message.get("content"), dict):
+                # This is an agent result - format it properly
+                display_agent_result(message["content"])
+            else:
+                # Regular text message
+                st.markdown(message["content"])
+
+    # Sample questions
+    st.markdown("**💡 Try asking:**")
+    sample_questions = [
+        "Is my portfolio healthy? What should I do?",
+        "Should I buy more AAPL stock right now?",
+        "What's happening in the market today?",
+        "How can I optimize my portfolio for better returns?",
+        "Am I taking too much risk with my investments?"
+    ]
+
+    cols = st.columns(len(sample_questions))
+    for i, question in enumerate(sample_questions):
+        with cols[i % len(cols)]:
+            if st.button(question, key=f"sample_q_{i}", use_container_width=True):
+                # Trigger the question
+                process_agent_query(agent, question)
+                st.rerun()
+
+    # Main chat input
+    if prompt := st.chat_input("Ask about your portfolio, stocks, market analysis, or investment strategies..."):
+        process_agent_query(agent, prompt)
+        st.rerun()
+
+
+def process_agent_query(agent, user_input: str):
+    """Process user query through the agentic system"""
+
+    # Add user message to chat
+    st.session_state.chat_history.append({"role": "user", "content": user_input})
+
+    # Show user message immediately
+    with st.chat_message("user"):
+        st.markdown(user_input)
+
+    # Process through agent with loading indicator
+    with st.chat_message("assistant"):
+        with st.spinner("🤖 Agent is analyzing and thinking..."):
+            try:
+                # Call the agentic system
+                result = agent.analyze(user_input)
+
+                # Display formatted result
+                display_agent_result(result)
+
+                # Store full result in chat history
+                st.session_state.chat_history.append({
+                    "role": "assistant",
+                    "content": result
+                })
+
+            except Exception as e:
+                st.error(f"❌ Agent analysis failed: {e}")
+                st.session_state.chat_history.append({
+                    "role": "assistant",
+                    "content": f"I encountered an error: {e}"
+                })
 
 def create_ai_chat_interface(mcp_host: MCPHost):
     """Enhanced AI chat interface with contextual awareness"""
@@ -505,7 +597,7 @@ def create_ai_chat_interface(mcp_host: MCPHost):
         # Process and respond
         with st.chat_message("assistant"):
             with st.spinner("Analyzing..."):
-                response = process_enhanced_user_query(mcp_host, prompt)
+                response = process_enhanced_user_query(prompt)
                 st.markdown(response)
         
         # Add assistant response
@@ -1246,42 +1338,46 @@ def display_market_sentiment():
         st.metric("VIX Level", "18.5", "+2.1%")
 
 # Enhanced query processing functions
-def process_enhanced_user_query(mcp_host: MCPHost, query: str) -> str:
-    """Enhanced query processing with context awareness"""
-    query_lower = query.lower()
-    
-    try:
-        # Portfolio queries
-        if any(word in query_lower for word in ['portfolio', 'positions', 'holdings', 'my stocks']):
-            return handle_portfolio_query(mcp_host)
-        
-        # Market queries
-        elif any(word in query_lower for word in ['market', 'indices', 'sp500', 'nasdaq', 'dow']):
-            return handle_market_query(mcp_host)
-        
-        # Stock analysis queries
-        elif 'analyze' in query_lower or 'analysis' in query_lower:
-            return handle_analysis_query(mcp_host, query)
-        
-        # Add position queries
-        elif 'add' in query_lower and any(word in query_lower for word in ['position', 'stock', 'buy', 'shares']):
-            return handle_add_position_query(mcp_host, query)
-        
-        # Performance queries
-        elif any(word in query_lower for word in ['performance', 'return', 'profit', 'loss']):
-            return handle_performance_query(mcp_host)
-        
-        # Risk queries
-        elif any(word in query_lower for word in ['risk', 'volatility', 'beta']):
-            return handle_risk_query(mcp_host)
-        
-        # General help
-        else:
-            return get_help_response()
-    
-    except Exception as e:
-        logger.error(f"Error processing query: {e}")
-        return f"❌ I encountered an error processing your request: {str(e)}\n\nPlease try rephrasing your question or check if the servers are responding properly."
+# def process_enhanced_user_query(mcp_host: MCPHost, query: str) -> str:
+#     """Enhanced query processing with context awareness"""
+#     query_lower = query.lower()
+#
+#     try:
+#         # Portfolio queries
+#         if any(word in query_lower for word in ['portfolio', 'positions', 'holdings', 'my stocks']):
+#             return handle_portfolio_query(mcp_host)
+#
+#         # Market queries
+#         elif any(word in query_lower for word in ['market', 'indices', 'sp500', 'nasdaq', 'dow']):
+#             return handle_market_query(mcp_host)
+#
+#         # Stock analysis queries
+#         elif 'analyze' in query_lower or 'analysis' in query_lower:
+#             return handle_analysis_query(mcp_host, query)
+#
+#         # # Add position queries
+#         # elif 'add' in query_lower and any(word in query_lower for word in ['position', 'stock', 'buy', 'shares']):
+#         #     return handle_add_position_query(mcp_host, query)
+#         #
+#         # # Performance queries
+#         # elif any(word in query_lower for word in ['performance', 'return', 'profit', 'loss']):
+#         #     return handle_performance_query(mcp_host)
+#         #
+#         # # Risk queries
+#         # elif any(word in query_lower for word in ['risk', 'volatility', 'beta']):
+#         #     return handle_risk_query(mcp_host)
+#
+#         # General help
+#         else:
+#             return get_help_response()
+#
+#     except Exception as e:
+#         logger.error(f"Error processing query: {e}")
+#         return f"❌ I encountered an error processing your request: {str(e)}\n\nPlease try rephrasing your question or check if the servers are responding properly."
+
+def process_enhanced_user_query(query: str) -> str:
+    agent = TrueAgenticFinancialAgent()
+    return agent.analyze(query)
 
 def handle_portfolio_query(mcp_host: MCPHost) -> str:
     """Handle portfolio-related queries"""
@@ -1442,21 +1538,21 @@ def analyze_stock_comprehensive(mcp_host: MCPHost, symbol: str) -> str:
     percent_change = stock_data.get('percent_change_pct', 0)
     
     response = f"""
-## 📊 {symbol} - {company_name} Analysis
-
-### 💹 Current Trading Data
-**Current Price:** ${current_price:.2f}
-**Daily Change:** {price_change:+.2f} ({percent_change:+.2f}%)
-**Volume:** {stock_data.get('volume', 0):,}
-
-### 📈 Key Fundamentals
-**Market Cap:** ${stock_data.get('market_cap', 0):,.0f}
-**P/E Ratio:** {stock_data.get('pe_ratio', 0):.2f}
-**52W High:** ${stock_data.get('high_52w', 0):.2f}
-**52W Low:** ${stock_data.get('low_52w', 0):.2f}
-**Beta:** {stock_data.get('beta', 0):.2f}
-**Sector:** {stock_data.get('sector', 'N/A')}
-"""
+            ## 📊 {symbol} - {company_name} Analysis
+            
+            ### 💹 Current Trading Data
+            **Current Price:** ${current_price:.2f}
+            **Daily Change:** {price_change:+.2f} ({percent_change:+.2f}%)
+            **Volume:** {stock_data.get('volume', 0):,}
+            
+            ### 📈 Key Fundamentals
+            **Market Cap:** ${stock_data.get('market_cap', 0):,.0f}
+            **P/E Ratio:** {stock_data.get('pe_ratio', 0):.2f}
+            **52W High:** ${stock_data.get('high_52w', 0):.2f}
+            **52W Low:** ${stock_data.get('low_52w', 0):.2f}
+            **Beta:** {stock_data.get('beta', 0):.2f}
+            **Sector:** {stock_data.get('sector', 'N/A')}
+            """
     
     # Technical analysis
     if "error" not in technical_data:
@@ -1473,6 +1569,154 @@ def analyze_stock_comprehensive(mcp_host: MCPHost, symbol: str) -> str:
     ${ma.get('ma_200', 0):.2f if ma.get('ma_200') else 'N/A'}
     """
 
+
+def display_agent_result(result: Dict[str, Any]):
+    """Display agent analysis result with proper formatting"""
+
+    if result['status'] != 'success':
+        st.error(f"❌ Analysis failed: {result.get('error', 'Unknown error')}")
+        return
+
+    # Header with confidence and stats
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        confidence = result.get('confidence', 0)
+        if confidence >= 0.8:
+            st.success(f"🎯 **High Confidence:** {confidence:.0%}")
+        elif confidence >= 0.6:
+            st.warning(f"🤔 **Medium Confidence:** {confidence:.0%}")
+        else:
+            st.info(f"🔍 **Low Confidence:** {confidence:.0%}")
+
+    with col2:
+        iterations = result.get('iterations_used', 0)
+        st.metric("Analysis Steps", iterations)
+
+    with col3:
+        timestamp = result.get('timestamp', '')
+        if timestamp:
+            time_str = timestamp.split('T')[1][:8]  # Extract time part
+            st.caption(f"🕐 Analyzed at {time_str}")
+
+    st.divider()
+
+    # Show reasoning process in expandable section
+    analysis_log = result.get('analysis_log', '')
+    if analysis_log and '**Iteration' in analysis_log:
+        with st.expander("🧠 **See How The Agent Reasoned**", expanded=False):
+            st.markdown(analysis_log)
+        st.divider()
+
+    # Main answer with better formatting
+    final_answer = result.get('final_answer', '')
+    if final_answer:
+        # Add custom CSS for better formatting
+        st.markdown("""
+        <style>
+        .agent-response {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            border-radius: 15px;
+            color: white;
+            margin: 10px 0;
+        }
+        .agent-response h2 {
+            color: #ffffff !important;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            padding-bottom: 10px;
+        }
+        .agent-response h3 {
+            color: #f0f0f0 !important;
+            margin-top: 20px;
+        }
+        .agent-response strong {
+            color: #ffffff !important;
+        }
+        </style>
+        """, unsafe_allow_html=True)
+
+        # Format the response
+        formatted_answer = format_agent_response(final_answer)
+        st.markdown(f'<div class="agent-response">{formatted_answer}</div>',
+                    unsafe_allow_html=True)
+    else:
+        st.error("No response generated")
+
+
+def format_agent_response(response_text: str) -> str:
+    """Format the agent response for better display"""
+
+    # Convert markdown to HTML for better styling
+    import re
+
+    # Format headers
+    response_text = re.sub(r'\*\*(.*?)\*\*', r'<h3>\1</h3>', response_text)
+    response_text = re.sub(r'## (.*?)(?=\n)', r'<h2>\1</h2>', response_text)
+    response_text = re.sub(r'### (.*?)(?=\n)', r'<h3>\1</h3>', response_text)
+
+    # Format bullet points
+    response_text = re.sub(r'- (.*?)(?=\n)', r'• \1<br>', response_text)
+    response_text = re.sub(r'(\d+)\. (.*?)(?=\n)', r'<strong>\1.</strong> \2<br>', response_text)
+
+    # Add line breaks
+    response_text = response_text.replace('\n\n', '<br><br>')
+    response_text = response_text.replace('\n', '<br>')
+
+    return response_text
+
+
+# Add this CSS for better visual appeal
+def add_custom_css():
+    """Add custom CSS for better agent response formatting"""
+
+    st.markdown("""
+    <style>
+    /* Agent response styling */
+    .agent-confidence-high {
+        background: linear-gradient(90deg, #00c851, #007E33);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+    }
+
+    .agent-confidence-medium {
+        background: linear-gradient(90deg, #ffbb33, #FF8800);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+    }
+
+    .agent-confidence-low {
+        background: linear-gradient(90deg, #33b5e5, #0099CC);
+        color: white;
+        padding: 8px 16px;
+        border-radius: 20px;
+        font-weight: bold;
+    }
+
+    /* Thinking process styling */
+    .agent-thinking {
+        background: rgba(255, 255, 255, 0.05);
+        border-left: 4px solid #1f77b4;
+        padding: 15px;
+        margin: 10px 0;
+        border-radius: 5px;
+    }
+
+    /* Demo cards */
+    .demo-card {
+        transition: transform 0.2s;
+        cursor: pointer;
+    }
+
+    .demo-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    </style>
+    """, unsafe_allow_html=True)
 
 def refresh_portfolio_data(mcp_host: MCPHost):
     """Refresh portfolio data"""
@@ -1515,5 +1759,20 @@ def refresh_all_data(mcp_host: MCPHost):
         st.session_state.last_update = datetime.now()
 
         st.success("All data refreshed!")
+
+
+# Initialize agent in your UI
+@st.cache_resource
+def get_agent():
+    return TrueAgenticFinancialAgent()
+
+
+# def main():
+#     agent = get_agent()
+#
+#     if user_input := st.chat_input("Ask your financial question..."):
+#         with st.spinner("Agent analyzing..."):
+#             result = agent.analyze(user_input)
+#         st.markdown(result['final_answer'])
 
 main()
