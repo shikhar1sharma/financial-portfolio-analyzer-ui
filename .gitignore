@@ -1,0 +1,120 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+financial_env/
+venv/
+env/
+ENV/
+.venv/
+
+# Environment Variables
+.env
+.env.local
+.env.production
+.env.staging
+*.env
+
+# Database
+*.db
+*.sqlite3
+data/
+*.sql
+
+# Logs
+logs/
+*.log
+streamlit/
+
+# Process IDs
+pids/
+*.pid
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.pyc
+*.sublime-*
+
+# OS
+.DS_Store
+Thumbs.db
+*.bak
+
+# Project specific
+backups/
+temp/
+cache/
+.pytest_cache/
+.coverage
+htmlcov/
+.streamlit/secrets.toml
+
+# Streamlit specific
+.streamlit/config.toml
+.streamlit/credentials.toml
+
+# Jupyter Notebooks (if you add them)
+.ipynb_checkpoints/
+*.ipynb
+
+# Node modules (if you add any frontend)
+node_modules/
+package-lock.json
+yarn.lock
+
+# Testing
+.tox/
+.coverage
+.coverage.*
+*.cover
+.hypothesis/
+.pytest_cache/
+nosetests.xml
+coverage.xml
+*.coveragerc
+
+# Documentation builds
+docs/_build/
+site/
+
+# AWS & Cloud credentials
+.aws/
+credentials
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Analysis outputs
+reports/
+exports/
+*.csv
+*.xlsx
+*.pdf
+
+# Debug files
+debug.log
+error.log
