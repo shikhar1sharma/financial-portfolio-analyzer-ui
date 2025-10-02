@@ -1,12 +1,22 @@
-streamlit>=1.28.0
-plotly>=5.15.0
-pandas>=2.0.0
-requests>=2.31.0
-python-dotenv>=1.0.0
+# Core Web Framework
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
 
-# AI/ML
-openai>=1.0.0
-anthropic>=0.7.0
-langchain>=0.1.0
-transformers>=4.30.0
-torch>=2.0.0
+# Financial Data
+yfinance==0.2.32
+
+# Data Processing - Updated for Python 3.13
+pandas>=2.1.0
+numpy>=1.26.0
+
+# Utilities
+python-dotenv==1.0.0
+pydantic==2.5.0
+requests==2.31.0
+
+# AI
+openai==1.3.0
+
+# UI
+streamlit==1.28.0
+plotly==5.17.0

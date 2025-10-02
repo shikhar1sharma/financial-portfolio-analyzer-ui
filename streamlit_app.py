@@ -475,6 +475,24 @@ def create_main_content(mcp_host: MCPHost):
     with tab5:
         create_market_view(mcp_host)
 
+    st.divider()
+
+    # Get agent
+    @st.cache_resource
+    def get_financial_agent():
+        return TrueAgenticFinancialAgent()
+
+    try:
+        agent = get_financial_agent()
+
+        # Main chat input - NOW AT PAGE LEVEL
+        if prompt := st.chat_input("Ask about your portfolio, stocks, market analysis, or investment strategies..."):
+            process_agent_query(agent, prompt)
+            st.rerun()
+
+    except Exception as e:
+        st.error(f"❌ Agent unavailable: {e}")
+
 
 # Updated chat interface function
 def create_ai_chat_interface_with_agent():
@@ -522,10 +540,10 @@ def create_ai_chat_interface_with_agent():
                 process_agent_query(agent, question)
                 st.rerun()
 
-    # Main chat input
-    if prompt := st.chat_input("Ask about your portfolio, stocks, market analysis, or investment strategies..."):
-        process_agent_query(agent, prompt)
-        st.rerun()
+    # # Main chat input
+    # if prompt := st.chat_input("Ask about your portfolio, stocks, market analysis, or investment strategies..."):
+    #     process_agent_query(agent, prompt)
+    #     st.rerun()
 
 
 def process_agent_query(agent, user_input: str):
